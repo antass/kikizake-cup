@@ -1,0 +1,562 @@
+<title>Kikizake Cup</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow column like a tasting card; tabs pinned on top; the score is a kikichoko cup seen from above (ja-no-me rings). */
+:root{
+  --bg:#f4f5f7; --paper:#ffffff; --ink:#171f33; --muted:#5d6577; --line:#dfe2e9;
+  --ai:#1d3577; --ai-soft:#e4e9f5; --fill:#1d3577; --on-fill:#ffffff;
+  --cup:#f6f1e6; --ring:#1d3577; --cup-ink:#171f33; --cup-edge:#e3dccd;
+  --cedar:#8a6534; --cedar-ink:#7a5729; --cedar-soft:#f3ece1;
+  --good:#2f7d4f; --warn:#a8641c; --bad:#a83a3a;
+  --f-display:"Shippori Mincho B1","Hiragino Mincho ProN",Georgia,serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  /* Aizome night: indigo-dyed cloth ground; worn-cream porcelain for text, fills and the cup */
+  --bg:#0a1429; --paper:#121f3f; --ink:#e9e2d2; --muted:#a6b0c8; --line:#24365e;
+  --ai:#aebde6; --ai-soft:#1b2a50; --fill:#e8e0cd; --on-fill:#182f6a;
+  --cup:#ece4d2; --ring:#1d3577; --cup-ink:#171f33; --cup-edge:#334675;
+  --cedar:#dcb57f; --cedar-ink:#e6c595; --cedar-soft:#2e2922;
+  --good:#6fcf97; --warn:#e3a35a; --bad:#ef8a8a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  /* Aizome night: indigo-dyed cloth ground; worn-cream porcelain for text, fills and the cup */
+  --bg:#0a1429; --paper:#121f3f; --ink:#e9e2d2; --muted:#a6b0c8; --line:#24365e;
+  --ai:#aebde6; --ai-soft:#1b2a50; --fill:#e8e0cd; --on-fill:#182f6a;
+  --cup:#ece4d2; --ring:#1d3577; --cup-ink:#171f33; --cup-edge:#334675;
+  --cedar:#dcb57f; --cedar-ink:#e6c595; --cedar-soft:#2e2922;
+  --good:#6fcf97; --warn:#e3a35a; --bad:#ef8a8a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 0;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.brand h1{font-family:var(--f-display);font-weight:800;font-size:26px;margin:0;letter-spacing:.01em}
+.brand .jp{font-family:var(--f-display);color:var(--ai);font-size:15px}
+.brand .sub{color:var(--muted);font-size:13px;margin-left:auto}
+nav{display:flex;gap:4px;margin-top:10px}
+nav a{flex:1;text-align:center;padding:10px 6px;text-decoration:none;color:var(--muted);font-weight:500;border-bottom:3px solid transparent}
+nav a[aria-current="page"]{color:var(--ink);border-color:var(--ai)}
+nav a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ai);outline-offset:2px}
+main{display:grid;gap:18px;padding-top:18px}
+h2{font-family:var(--f-display);font-size:21px;margin:0;text-wrap:balance}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0;font-weight:700}
+.muted{color:var(--muted)} .small{font-size:13px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:12px;min-width:0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+button,.btn{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:9px 14px;border-radius:8px;cursor:pointer}
+button.primary{background:var(--fill);border-color:var(--fill);color:var(--on-fill);font-weight:700;padding:12px 16px;border-radius:10px}
+button.ghost{background:transparent}
+button:disabled{opacity:.5;cursor:default}
+.chip{font:inherit;font-size:13px;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--fill);border-color:var(--fill);color:var(--on-fill)}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;background:var(--ai-soft);color:var(--ai);white-space:nowrap}
+.tag.cedar{background:var(--cedar-soft);color:var(--cedar-ink)}
+.tag.warn{background:var(--cedar-soft);color:var(--warn)}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+/* bottle picker */
+.bottles{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.bottle{text-align:left;display:grid;gap:6px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--paper);cursor:pointer;min-width:0}
+.bottle:hover{border-color:var(--ai)}
+.bottle .nm{font-family:var(--f-display);font-weight:700;font-size:16px;line-height:1.25}
+.bottle .meta{font-size:12px;color:var(--muted)}
+/* sliders */
+.axis{display:grid;gap:4px}
+.axis .lbl{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.axis .lbl b{color:var(--ink);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--ai)}
+.fam{display:grid;gap:6px}
+.fam .fname{font-size:12px;color:var(--muted)}
+input[type=number],select,textarea,input[type=text]{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+textarea{min-height:70px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stars button{border:none;background:none;font-size:24px;padding:0 2px;color:var(--line)}
+.stars button.on{color:var(--cedar)}
+/* reveal */
+.cup{display:grid;place-items:center}
+.cup svg{width:220px;max-width:100%;height:auto}
+.verdict{text-align:center;font-family:var(--f-display);font-size:22px;font-weight:700}
+.cmp{display:grid;gap:14px}
+.track{position:relative;height:26px}
+.track .bar{position:absolute;left:0;right:0;top:12px;height:2px;background:var(--line)}
+.track .tick{position:absolute;top:8px;width:1px;height:10px;background:var(--line)}
+.track .you,.track .off{position:absolute;top:5px;width:16px;height:16px;border-radius:50%;transform:translateX(-50%)}
+.track .you{border:3px solid var(--cedar);background:var(--paper)}
+.track .off{background:var(--ai)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+.notes-res{display:flex;flex-wrap:wrap;gap:6px}
+.n-hit{background:var(--fill);color:var(--on-fill)} .n-close{background:var(--ai-soft);color:var(--ai)}
+.n-miss{background:transparent;color:var(--muted);border:1px dashed var(--line)} .n-extra{background:var(--cedar-soft);color:var(--cedar-ink)}
+.n-hit,.n-close,.n-miss,.n-extra{font-size:13px;padding:4px 10px;border-radius:999px}
+.ai-out{white-space:pre-wrap;background:var(--ai-soft);border-radius:8px;padding:12px;font-size:14px}
+/* tally */
+.tally{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tally div{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;gap:2px}
+.tally b{font-family:var(--f-mono);font-size:24px;font-weight:500}
+.tally span{font-size:12px;color:var(--muted)}
+@media (max-width:420px){.tally{grid-template-columns:repeat(2,1fr)} .grid2{grid-template-columns:1fr}}
+.hbar{display:grid;grid-template-columns:90px 1fr 34px;gap:8px;align-items:center;font-size:13px}
+.hbar .b{height:10px;border-radius:5px;background:var(--ai)}
+.hbar .bt{background:var(--line);border-radius:5px;overflow:hidden}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:none;border-radius:0;padding:7px 10px;font-size:13px;background:var(--paper)}
+.seg button[aria-pressed="true"]{background:var(--fill);color:var(--on-fill)}
+.cellar-item{display:grid;gap:10px}
+.cellar-item .nm{font-family:var(--f-display);font-weight:700;font-size:17px}
+details summary{cursor:pointer;color:var(--ai);font-size:14px}
+.log-item{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding-block:10px;border-bottom:1px solid var(--line)}
+.log-item:last-child{border-bottom:none}
+.score-badge{font-family:var(--f-mono);font-size:18px;text-align:center;border:2px solid var(--ai);color:var(--ai);border-radius:50%;width:48px;height:48px;display:grid;place-items:center}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;max-width:calc(100% - 32px);z-index:20}
+.empty{text-align:center;color:var(--muted);padding:24px 8px}
+@media (prefers-reduced-motion:no-preference){.cup .arc{transition:stroke-dashoffset 1.1s ease-out}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1>Kikizake Cup</h1><span class="jp">利き酒</span>
+      <span class="sub" id="sub">Taste, guess, compare.</span>
+    </div>
+    <nav>
+      <a href="#taste" id="nav-taste">Taste</a>
+      <a href="#cellar" id="nav-cellar">Cellar</a>
+      <a href="#log" id="nav-log">Log</a>
+    </nav>
+  </header>
+  <main id="view"><div class="empty">Opening your cellar…</div></main>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const NOTION = "Notion";
+const NOTION_DS = ""; // optional: your Notion sake database, "collection://<data source id>"
+const TEMPS = ["Chilled","Room temp","Warm","Hot","Over ice"];
+const GRADES = ["Junmai","Junmai Ginjo","Junmai Daiginjo","Ginjo","Daiginjo","Honjozo","Futsushu","Genshu","Nigori","Flavored"];
+const AXES = [
+  {k:"body",  name:"Body",    lo:"Light · tanrei", hi:"Rich · nōjun"},
+  {k:"sweet", name:"Sweetness", lo:"Dry · karakuchi", hi:"Sweet · amakuchi"},
+  {k:"aroma", name:"Aroma",   lo:"Quiet", hi:"Fragrant · kaori"},
+  {k:"acid",  name:"Acidity", lo:"Soft", hi:"Bright · sando"},
+];
+const FAMILIES = {
+  "Melon & tropical":["melon","banana","lychee","pineapple","mango"],
+  "Orchard fruit":["pear","apple","peach","apricot"],
+  "Citrus":["citrus","lemon","yuzu","grapefruit"],
+  "Berry & grape":["strawberry","plum","grape","cherry"],
+  "Floral":["floral","white flowers","blossom"],
+  "Rice & grain":["steamed rice","grain","koji","cereal"],
+  "Savory":["umami","mushroom","nutty","almond","earthy"],
+  "Sweet & creamy":["cream","honey","vanilla","caramel"],
+  "Herb & spice":["anise","mint","herbal","pepper"],
+  "Clean & mineral":["mineral","crisp","clean finish"],
+};
+const ALIAS = {honeydew:"melon",cantaloupe:"melon","muskmelon":"melon",muscat:"grape",ume:"plum",rice:"steamed rice","rice umami":"umami",peppermint:"mint","star anise":"anise",creamy:"cream",nuts:"nutty",nut:"nutty",earth:"earthy",lime:"citrus",orange:"citrus",flowers:"floral",flower:"floral","green apple":"apple","asian pear":"pear",shiitake:"mushroom",cereal:"cereal",grains:"grain","sweet grain":"grain",custard:"cream",dry:"crisp",sharp:"crisp"};
+const NOTE_FAMILY = {}; for (const [f,ns] of Object.entries(FAMILIES)) ns.forEach(n=>NOTE_FAMILY[n]=f);
+const normNote = s => { const t=String(s||"").trim().toLowerCase(); return ALIAS[t]||t; };
+
+/* ---------- scoring (pure) ---------- */
+const AXIS_PTS=[100,75,40,10,0];
+function scoreTasting(guess, prof, category, abv){
+  const axes = AXES.filter(a=>prof && prof[a.k]!=null && guess[a.k]!=null).map(a=>{
+    const d=Math.abs(guess[a.k]-prof[a.k]); return {k:a.k,g:guess[a.k],o:prof[a.k],s:AXIS_PTS[Math.min(4,d)]};
+  });
+  const axisScore = axes.length ? axes.reduce((s,x)=>s+x.s,0)/axes.length : null;
+  const off=[...new Set((prof?.notes||[]).map(normNote).filter(Boolean))];
+  const gs=[...new Set((guess.notes||[]).map(normNote).filter(Boolean))];
+  const used=new Set(); const hits=[],close=[],miss=[];
+  for(const n of off) if(gs.includes(n)){hits.push(n);used.add(n);}
+  for(const n of off){ if(hits.includes(n)) continue;
+    const f=NOTE_FAMILY[n]; const g=f && gs.find(x=>!used.has(x)&&NOTE_FAMILY[x]===f);
+    if(g){close.push({off:n,you:g});used.add(g);} else miss.push(n); }
+  const extra=gs.filter(x=>!used.has(x));
+  let noteScore=null;
+  if(off.length){ const credit=hits.length+0.5*close.length;
+    const R=credit/off.length, P=gs.length?credit/gs.length:0;
+    noteScore = (P+R)? Math.round(100*2*P*R/(P+R)) : 0; }
+  let base = axisScore==null && noteScore==null ? 0 : axisScore==null ? noteScore : noteScore==null ? axisScore : 0.6*axisScore+0.4*noteScore;
+  const bonus=[];
+  if(guess.grade && (category||[]).some(c=>c.toLowerCase().includes(guess.grade.toLowerCase()))) bonus.push({what:"Grade",pts:5});
+  if(guess.abv!=null && abv!=null && Math.abs(guess.abv-abv)<=1) bonus.push({what:"ABV",pts:5});
+  const total=Math.min(100,Math.round(base+bonus.reduce((s,b)=>s+b.pts,0)));
+  return {total,axisScore:axisScore==null?null:Math.round(axisScore),noteScore,axes,hits,close,miss,extra,bonus};
+}
+function verdict(s){ return s>=90?"Tōji-level palate":s>=75?"Sake sommelier in training":s>=55?"Promising nose":s>=35?"Getting warmer":"Keep sipping"; }
+
+/* ---------- state ---------- */
+let db=null, mcp=null, sample=null, imagesOK=false;
+const bottles=new Map(); let tastings=[]; let loaded={b:false,t:false};
+const ui={step:"pick",bottleId:null,guess:null,result:null,aiText:"",showDone:false};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function toast(msg,ms=3200){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,ms);}
+const route=()=>(["taste","cellar","log"].includes(location.hash.slice(1))?location.hash.slice(1):"taste");
+const freshGuess=b=>({body:3,sweet:3,aroma:3,acid:3,notes:[],grade:"",abv:null,temp:b?.storage==="Fridge"?"Chilled":"Room temp",stars:0,comment:""});
+const hasProfile=b=>b.profile && AXES.some(a=>b.profile[a.k]!=null);
+const SOURCE_LABEL={"tippsy-card":"From the Tippsy card","researched":"From Tippsy and retailer tasting notes","notion-label":"From your Notion taste label","claude-estimate":"Claude's estimate (unverified)","manual":"Entered by you"};
+
+/* ---------- render ---------- */
+function render(){
+  const r=route();
+  for(const k of ["taste","cellar","log"]) $("#nav-"+k).toggleAttribute("aria-current",k===r), $("#nav-"+k).setAttribute("aria-current",k===r?"page":"false");
+  if(!db){ $("#view").innerHTML=`<div class="card empty">Open this page in Claude to load your sake cellar.</div>`; return; }
+  if(!loaded.b){ return; }
+  $("#view").innerHTML = r==="cellar"?viewCellar(): r==="log"?viewLog(): viewTaste();
+  bind(r);
+}
+function tallyHTML(){
+  const all=[...bottles.values()];
+  const c=s=>all.filter(b=>b.status===s).length;
+  const fridge=all.filter(b=>b.storage==="Fridge"&&b.status!=="Done").length;
+  return `<div class="tally">
+    <div><b>${c("Unopened")}</b><span>Unopened</span></div>
+    <div><b>${c("Opened")}</b><span>Opened</span></div>
+    <div><b>${c("Done")}</b><span>Finished</span></div>
+    <div><b>${fridge}</b><span>Chilling in fridge</span></div></div>`;
+}
+function sortedBottles(){
+  const order={Opened:0,Unopened:1,Done:2};
+  return [...bottles.values()].sort((a,b)=>(order[a.status]??3)-(order[b.status]??3)||a.name.localeCompare(b.name));
+}
+
+function viewTaste(){
+  if(ui.step==="guess") return viewGuess();
+  if(ui.step==="reveal") return viewReveal();
+  const list=sortedBottles().filter(b=>ui.showDone||b.status!=="Done");
+  return `<section class="card">
+    <h2>Pour a glass, then pick the bottle</h2>
+    <p class="muted small" style="margin:0">You'll rate body, sweetness, aroma and acidity and pick the flavors you notice. Then the bottle's profile is revealed and scored against your guess.</p>
+  </section>
+  ${list.length?`<div class="bottles">${list.map(b=>`
+    <button class="bottle" data-pick="${esc(b.id)}">
+      <span class="row between"><span class="tag ${b.status==="Opened"?"":"cedar"}">${b.status==="Done"?"Finished":esc(b.status)}</span>${b.storage==="Fridge"?'<span class="tag">Chilled</span>':""}</span>
+      <span class="nm">${esc(b.name)}</span>
+      <span class="meta">${esc((b.category||[]).join(" · "))}${b.abv?` · <span class="num">${b.abv}%</span>`:""}</span>
+      ${hasProfile(b)?(!["tippsy-card","researched"].includes(b.profileSource)?`<span class="meta">${b.profileSource==="notion-label"?"Profile: Notion label only":"Profile: "+esc(SOURCE_LABEL[b.profileSource]||"")}</span>`:""):`<span class="tag warn">No profile yet</span>`}
+    </button>`).join("")}</div>`:`<div class="card empty">No bottles to taste. ${bottles.size?"Every bottle is finished.":"Sync from Notion on the Cellar tab."}</div>`}
+  <div class="row"><button class="ghost small" id="toggle-done">${ui.showDone?"Hide finished bottles":"Show finished bottles"}</button></div>`;
+}
+
+function viewGuess(){
+  const b=bottles.get(ui.bottleId), g=ui.guess;
+  return `<section class="card">
+    <div class="row between"><h2>${esc(b.name)}</h2><button class="ghost small" id="back">Change bottle</button></div>
+    <div class="row small muted">Recommended: ${(b.temps||[]).map(t=>`<span class="tag cedar">${esc(t)}</span>`).join(" ")||"—"}</div>
+  </section>
+  <section class="card"><h3>How is it served?</h3>
+    <div class="row">${TEMPS.map(t=>`<button class="chip" data-temp="${t}" aria-pressed="${g.temp===t}">${t}</button>`).join("")}</div>
+  </section>
+  <section class="card"><h3>Your read</h3>
+    ${AXES.map(a=>`<div class="axis"><div class="lbl"><span>${a.lo}</span><b>${a.name}</b><span>${a.hi}</span></div>
+      <input type="range" min="1" max="5" step="1" id="ax-${a.k}" value="${g[a.k]}" aria-label="${a.name}"></div>`).join("")}
+  </section>
+  <section class="card"><h3>Flavors you notice</h3>
+    ${Object.entries(FAMILIES).map(([f,ns])=>`<div class="fam"><span class="fname">${f}</span><div class="row">${ns.map(n=>`<button class="chip" data-note="${n}" aria-pressed="${g.notes.includes(n)}">${n}</button>`).join("")}</div></div>`).join("")}
+  </section>
+  <section class="card"><h3>Bonus guesses</h3>
+    <div class="grid2">
+      <label class="small">Grade (+5)<select id="g-grade"><option value="">Skip</option>${GRADES.map(x=>`<option ${g.grade===x?"selected":""}>${x}</option>`).join("")}</select></label>
+      <label class="small">Alcohol % (+5 within 1%)<input type="number" id="g-abv" min="5" max="22" step="0.5" placeholder="e.g. 15" value="${g.abv??""}"></label>
+    </div>
+  </section>
+  <section class="card"><h3>Did you like it?</h3>
+    <div class="stars row" role="group" aria-label="Enjoyment">${[1,2,3,4,5].map(i=>`<button data-star="${i}" class="${g.stars>=i?"on":""}" aria-label="${i} star${i>1?"s":""}">★</button>`).join("")}</div>
+    <textarea id="g-comment" placeholder="Anything else? (optional)">${esc(g.comment)}</textarea>
+  </section>
+  ${hasProfile(b)?"":`<p class="small muted" style="margin:0">This bottle has no profile yet, so only the bonus guesses can be scored. You can add one from the Cellar tab after tasting.</p>`}
+  <button class="primary" id="reveal">Reveal the profile</button>`;
+}
+
+function cupSVG(score){
+  const R=96, C=2*Math.PI*R, off=C*(1-score/100);
+  return `<svg viewBox="0 0 220 220" role="img" aria-label="Score ${score} out of 100">
+    <circle cx="110" cy="110" r="104" fill="var(--cup)" stroke="var(--cup-edge)" stroke-width="2"/>
+    <circle cx="110" cy="110" r="70" fill="none" stroke="var(--ring)" stroke-width="10"/>
+    <circle cx="110" cy="110" r="46" fill="none" stroke="var(--ring)" stroke-width="10"/>
+    <circle class="arc" cx="110" cy="110" r="${R}" fill="none" stroke="var(--cedar)" stroke-width="6" stroke-linecap="round"
+      stroke-dasharray="${C}" stroke-dashoffset="${off}" transform="rotate(-90 110 110)"/>
+    <text x="110" y="122" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="38" fill="var(--cup-ink)">${score}</text>
+  </svg>`;
+}
+function trackHTML(g,o){
+  const p=v=>((v-1)/4*100)+"%";
+  return `<div class="track"><div class="bar"></div>${[1,2,3,4,5].map(v=>`<div class="tick" style="left:${p(v)}"></div>`).join("")}
+    ${o!=null?`<div class="off" style="left:${p(o)}"></div>`:""}<div class="you" style="left:${p(g)}"></div></div>`;
+}
+function viewReveal(){
+  const b=bottles.get(ui.bottleId), r=ui.result, g=ui.guess, prof=b.profile||{};
+  const descOK=b.descTrusted||b.profileSource==="tippsy-card"||b.profileSource==="researched";
+  return `<section class="card">
+    <div class="row between"><h2>${esc(b.name)}</h2><span class="tag cedar">${esc(g.temp)}</span></div>
+    <div class="cup">${cupSVG(r.total)}</div>
+    <div class="verdict">${verdict(r.total)}</div>
+    <div class="row small muted" style="justify-content:center">${r.axisScore!=null?`Taste <span class="num">${r.axisScore}</span>`:""}${r.noteScore!=null?` · Flavors <span class="num">${r.noteScore}</span>`:""}${r.bonus.map(x=>` · ${x.what} <span class="num">+${x.pts}</span>`).join("")}</div>
+  </section>
+  ${r.axes.length?`<section class="card cmp"><div class="row between"><h3>Taste</h3><div class="legend"><span><span class="dot" style="border:2px solid var(--cedar)"></span>You</span><span><span class="dot" style="background:var(--ai)"></span>Profile</span></div></div>
+    ${AXES.map(a=>prof[a.k]==null?"":`<div class="axis"><div class="lbl"><span>${a.lo}</span><b>${a.name}</b><span>${a.hi}</span></div>${trackHTML(g[a.k],prof[a.k])}</div>`).join("")}
+  </section>`:""}
+  ${(prof.notes||[]).length?`<section class="card"><h3>Flavors</h3>
+    <div class="notes-res">${r.hits.map(n=>`<span class="n-hit">✓ ${esc(n)}</span>`).join("")}${r.close.map(c=>`<span class="n-close">≈ ${esc(c.off)} <span class="small">(you: ${esc(c.you)})</span></span>`).join("")}${r.miss.map(n=>`<span class="n-miss">${esc(n)}</span>`).join("")}${r.extra.map(n=>`<span class="n-extra">+ ${esc(n)}</span>`).join("")}</div>
+    <p class="small muted" style="margin:0">✓ exact · ≈ same family, half credit · dashed: missed · +: you noticed, the profile doesn't list it</p></section>`:""}
+  <section class="card"><h3>The profile</h3>
+    <div class="row small">${(b.category||[]).map(c=>`<span class="tag">${esc(c)}</span>`).join("")}${b.abv?`<span class="tag cedar num">${b.abv}% ABV</span>`:""}${b.rpr?`<span class="tag cedar num">${b.rpr}% polish</span>`:""}${prof.smv!=null?`<span class="tag cedar num">SMV ${prof.smv}</span>`:""}</div>
+    ${descOK&&b.description?`<p style="margin:0">${esc(b.description)}</p>`:""}
+    ${prof.summary?`<p style="margin:0">${esc(prof.summary)}</p>`:""}
+    <p class="small muted" style="margin:0">${esc(SOURCE_LABEL[b.profileSource]||"No profile on file")}${b.profileSource==="notion-label"?". Scan the Tippsy card in Cellar for a sharper score.":""}</p>
+  </section>
+  ${sample?`<section class="card"><div class="row between"><h3>Sommelier's take</h3><button id="ask-take">${ui.aiText?"Ask again":"Ask Claude"}</button></div>
+    ${ui.aiText?`<div class="ai-out" id="ai-out">${esc(ui.aiText)}</div>`:`<div class="ai-out" id="ai-out" hidden></div>`}</section>`:""}
+  <div class="row"><button class="primary" id="again">Taste another</button>${b.status!=="Done"?`<button id="finish">Mark bottle finished</button>`:""}</div>`;
+}
+
+function viewCellar(){
+  const list=sortedBottles();
+  const temps={}; tastings.forEach(t=>temps[t.temp]=(temps[t.temp]||0)+1);
+  const maxT=Math.max(1,...Object.values(temps));
+  return `${tallyHTML()}
+  <section class="card"><div class="row between"><h3>How you've served them</h3><span class="small muted num">${tastings.length} tasting${tastings.length===1?"":"s"}</span></div>
+    ${tastings.length?TEMPS.map(t=>`<div class="hbar"><span>${t}</span><div class="bt"><div class="b" style="width:${(temps[t]||0)/maxT*100}%"></div></div><span class="num">${temps[t]||0}</span></div>`).join(""):`<p class="small muted" style="margin:0">Each tasting logs its serving temperature here.</p>`}
+  </section>
+  <section class="card"><div class="row between"><div><h3>Notion</h3><p class="small muted" style="margin:0">Sake Catalog · status changes here are written back.</p></div>
+    ${mcp?`<button id="sync">Sync from Notion</button>`:`<span class="small muted">Available when opened in Claude</span>`}</div></section>
+  ${list.map(b=>`<section class="card cellar-item" data-id="${esc(b.id)}">
+    <div class="row between"><span class="nm">${esc(b.name)}</span>${b.notionPending?'<span class="tag warn">Not yet in Notion</span>':""}</div>
+    <div class="small muted">${esc((b.category||[]).join(" · "))}${b.abv?` · ${b.abv}%`:""}${b.rpr?` · polish ${b.rpr}%`:""} · serve ${esc((b.temps||[]).join(", ")||"any")}</div>
+    <div class="row">
+      <div class="seg" role="group" aria-label="Status">${["Unopened","Opened","Done"].map(s=>`<button data-status="${s}" aria-pressed="${b.status===s}">${s==="Done"?"Finished":s}</button>`).join("")}</div>
+      <div class="seg" role="group" aria-label="Storage">${["Fridge","Shelf"].map(s=>`<button data-storage="${s}" aria-pressed="${(b.storage||"Shelf")===s}">${s==="Fridge"?"In fridge":"Room temp"}</button>`).join("")}</div>
+    </div>
+    <details><summary>Profile · ${hasProfile(b)?esc(SOURCE_LABEL[b.profileSource]||"set"):"none yet"}</summary>
+      <div style="display:grid;gap:10px;margin-top:10px">
+        ${AXES.map(a=>`<div class="axis"><div class="lbl"><span>${a.lo}</span><b>${a.name}</b><span>${a.hi}</span></div>
+          <input type="range" min="1" max="5" step="1" data-pax="${a.k}" value="${b.profile?.[a.k]??3}" aria-label="${a.name}"></div>`).join("")}
+        <label class="small">Flavor notes, comma separated<input type="text" data-pnotes value="${esc((b.profile?.notes||[]).join(", "))}"></label>
+        <div class="row"><button data-psave>Save profile</button>
+          ${sample&&imagesOK?`<label class="btn">Scan Tippsy card<input type="file" accept="image/*" capture="environment" data-pscan hidden></label>`:""}
+          ${sample?`<button data-pestimate class="ghost">Ask Claude to estimate</button>`:""}</div>
+        ${sample?`<details><summary>Paste card text instead</summary><textarea data-ptext placeholder="Paste the tasting notes from the card or the Tippsy page"></textarea><button data-pparse style="margin-top:6px">Read it</button></details>`:""}
+        <p class="small muted" data-pstatus style="margin:0"></p>
+      </div></details>
+  </section>`).join("")}
+  ${list.length?"":`<div class="card empty">No bottles yet. Sync from Notion to load your catalog.</div>`}`;
+}
+
+function viewLog(){
+  if(!tastings.length) return `<div class="card empty">No tastings yet. Pour a glass on the Taste tab — every guess lands here with its score and serving temperature.</div>`;
+  const avg=Math.round(tastings.reduce((s,t)=>s+t.score,0)/tastings.length);
+  const best=tastings.reduce((m,t)=>t.score>m.score?t:m,tastings[0]);
+  const byT={}; tastings.forEach(t=>{(byT[t.temp]=byT[t.temp]||[]).push(t.score)});
+  const axAcc={}; tastings.forEach(t=>(t.axes||[]).forEach(a=>{(axAcc[a.k]=axAcc[a.k]||[]).push(a.s)}));
+  const mean=a=>Math.round(a.reduce((s,x)=>s+x,0)/a.length);
+  const axRank=AXES.filter(a=>axAcc[a.k]).map(a=>({n:a.name,v:mean(axAcc[a.k])})).sort((x,y)=>y.v-x.v);
+  return `<div class="tally">
+    <div><b>${tastings.length}</b><span>Tastings</span></div>
+    <div><b>${avg}</b><span>Average score</span></div>
+    <div><b>${best.score}</b><span>Best · ${esc(best.bottleName)}</span></div>
+    <div><b>${new Set(tastings.map(t=>t.bottleId)).size}</b><span>Bottles tasted</span></div></div>
+  <section class="card"><h3>Where your palate is sharpest</h3>
+    ${axRank.map(a=>`<div class="hbar"><span>${a.n}</span><div class="bt"><div class="b" style="width:${a.v}%"></div></div><span class="num">${a.v}</span></div>`).join("")||'<p class="small muted" style="margin:0">Taste a bottle with a profile to see this.</p>'}
+    ${Object.keys(byT).length>1?`<p class="small muted" style="margin:0">Average by temperature: ${Object.entries(byT).map(([k,v])=>`${esc(k)} <span class="num">${mean(v)}</span>`).join(" · ")}</p>`:""}
+  </section>
+  <section class="card" style="gap:0">${tastings.map(t=>`<div class="log-item">
+    <div class="score-badge">${t.score}</div>
+    <div style="min-width:0"><div style="font-weight:700">${esc(t.bottleName)}</div>
+      <div class="small muted">${new Date(t.at).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})} · ${esc(t.temp)}${t.stars?` · ${"★".repeat(t.stars)}`:""}</div>
+      ${t.comment?`<div class="small">${esc(t.comment)}</div>`:""}</div>
+    <div class="small muted">${esc(verdict(t.score))}</div></div>`).join("")}</section>`;
+}
+
+/* ---------- events ---------- */
+function bind(r){
+  if(r==="taste"){
+    document.querySelectorAll("[data-pick]").forEach(el=>el.onclick=()=>{ui.bottleId=el.dataset.pick;ui.guess=freshGuess(bottles.get(ui.bottleId));ui.step="guess";render();scrollTo(0,0);});
+    $("#toggle-done")?.addEventListener("click",()=>{ui.showDone=!ui.showDone;render();});
+    if(ui.step==="guess"){
+      const g=ui.guess;
+      $("#back").onclick=()=>{ui.step="pick";render();};
+      document.querySelectorAll("[data-temp]").forEach(el=>el.onclick=()=>{g.temp=el.dataset.temp;document.querySelectorAll("[data-temp]").forEach(x=>x.setAttribute("aria-pressed",x===el));});
+      AXES.forEach(a=>$("#ax-"+a.k).oninput=e=>g[a.k]=+e.target.value);
+      document.querySelectorAll("[data-note]").forEach(el=>el.onclick=()=>{const n=el.dataset.note;const i=g.notes.indexOf(n);i<0?g.notes.push(n):g.notes.splice(i,1);el.setAttribute("aria-pressed",i<0);});
+      $("#g-grade").onchange=e=>g.grade=e.target.value;
+      $("#g-abv").oninput=e=>g.abv=e.target.value===""?null:+e.target.value;
+      document.querySelectorAll("[data-star]").forEach(el=>el.onclick=()=>{g.stars=+el.dataset.star;document.querySelectorAll("[data-star]").forEach(x=>x.classList.toggle("on",+x.dataset.star<=g.stars));});
+      $("#g-comment").oninput=e=>g.comment=e.target.value;
+      $("#reveal").onclick=reveal;
+    }
+    if(ui.step==="reveal"){
+      $("#again").onclick=()=>{ui.step="pick";ui.aiText="";render();scrollTo(0,0);};
+      $("#finish")?.addEventListener("click",()=>setStatus(ui.bottleId,"Done"));
+      $("#ask-take")?.addEventListener("click",askTake);
+    }
+  }
+  if(r==="cellar"){
+    $("#sync")?.addEventListener("click",syncFromNotion);
+    document.querySelectorAll(".cellar-item").forEach(card=>{
+      const id=card.dataset.id;
+      card.querySelectorAll("[data-status]").forEach(el=>el.onclick=()=>setStatus(id,el.dataset.status));
+      card.querySelectorAll("[data-storage]").forEach(el=>el.onclick=()=>db.doc("bottles/"+id).update({storage:el.dataset.storage}).catch(()=>toast("Couldn't save. Try again.")));
+      const st=card.querySelector("[data-pstatus]");
+      card.querySelector("[data-psave]").onclick=()=>{
+        const p={...(bottles.get(id).profile||{})};
+        card.querySelectorAll("[data-pax]").forEach(i=>p[i.dataset.pax]=+i.value);
+        p.notes=card.querySelector("[data-pnotes]").value.split(",").map(normNote).filter(Boolean);
+        saveProfile(id,p,"manual",st);
+      };
+      card.querySelector("[data-pscan]")?.addEventListener("change",e=>{const f=e.target.files?.[0];if(f) readCard(id,{image:f},st);});
+      card.querySelector("[data-pparse]")?.addEventListener("click",()=>{const t=card.querySelector("[data-ptext]").value.trim();if(t) readCard(id,{text:t},st);});
+      card.querySelector("[data-pestimate]")?.addEventListener("click",()=>readCard(id,{estimate:true},st));
+    });
+  }
+}
+
+async function reveal(){
+  const b=bottles.get(ui.bottleId), g=ui.guess;
+  ui.result=scoreTasting(g,b.profile,b.category,b.abv); ui.step="reveal"; ui.aiText="";
+  render(); scrollTo(0,0);
+  try{
+    await db.collection("tastings").add({bottleId:b.id,bottleName:b.name,at:new Date().toISOString(),temp:g.temp,
+      guess:{body:g.body,sweet:g.sweet,aroma:g.aroma,acid:g.acid,notes:g.notes,grade:g.grade||null,abv:g.abv},
+      score:ui.result.total,axes:ui.result.axes,noteScore:ui.result.noteScore,stars:g.stars,comment:g.comment,profileSource:b.profileSource||null});
+  }catch{ toast("Your score is shown but couldn't be saved to the log."); }
+  if(b.status==="Unopened") setStatus(b.id,"Opened",true);
+}
+
+/* ---------- Notion ---------- */
+function notionMsg(e){
+  switch(e?.code){
+    case "needs_reauth": return "Reconnect Notion in claude.ai Settings → Connectors.";
+    case "server_not_connected": return "Add the Notion connector in claude.ai Settings → Connectors.";
+    case "selection_required": return "Choose which Notion connection to use when Claude asks, then try again.";
+    case "not_in_manifest": case "approval_required": return "Notion access is off for this page. Allow it, then try again.";
+    case "blocked_by_policy": return "Your organization blocks this Notion tool.";
+    case "tool_error": return "Notion refused the change: "+String(e.message||"").slice(0,120);
+    default: return "Couldn't reach Notion right now. Try again in a minute.";
+  }
+}
+async function setStatus(id,status,auto){
+  const b=bottles.get(id); if(!b||b.status===status) return;
+  try{ await db.doc("bottles/"+id).update({status,statusAt:new Date().toISOString(),notionPending:true}); }
+  catch{ toast("Couldn't save the status. Try again."); return; }
+  if(!mcp){ toast(`Marked ${status==="Done"?"finished":status.toLowerCase()}. Notion updates when opened in Claude.`); return; }
+  try{
+    await mcp.callTool(NOTION,"notion-update-page",{page_id:id,command:"update_properties",properties:{Status:status}});
+    await db.doc("bottles/"+id).update({notionPending:false,notionStatus:status});
+    toast(`${auto?"Opened":"Saved"} · Notion updated`);
+  }catch(e){ toast(notionMsg(e),5000); }
+}
+const NQ=`SELECT url, Name, Category, Status, "Taste profile", "Serving temperature", "Alcohol %", "RPR %", "Rice varieties", "Pairing ideas", Description FROM "${NOTION_DS}"`;
+const arr=v=>{try{const a=typeof v==="string"?JSON.parse(v):v;return Array.isArray(a)?a:[]}catch{return []}};
+const tempFix=t=>t.replace("–","-");
+function labelProfile(label){
+  return {"Light & Dry":{body:2,sweet:2},"Light & Sweet":{body:2,sweet:4},"Rich & Sweet":{body:4,sweet:4},"Rich & Dry":{body:4,sweet:2}}[label]||null;
+}
+async function syncFromNotion(){
+  if(!NOTION_DS){ toast("Set NOTION_DS at the top of the file to sync from Notion.",5000); return; }
+  const btn=$("#sync"); btn.disabled=true; btn.textContent="Syncing…";
+  try{
+    const res=await mcp.callTool(NOTION,"notion-query-data-sources",{data:{data_source_urls:[NOTION_DS],query:NQ}},{cache:false});
+    let p=res.payload; if(typeof p==="string"){try{p=JSON.parse(p)}catch{}}
+    const rows=p?.results||[];
+    if(!rows.length) throw {code:"tool_error",message:"No rows came back from the Sake Catalog."};
+    let added=0,updated=0;
+    for(const r of rows){
+      const id=(String(r.url).match(/[0-9a-f]{32}/)||[])[0]; if(!id) continue;
+      const base={name:r.Name||"Untitled sake",category:arr(r.Category),abv:r["Alcohol %"]??null,rpr:r["RPR %"]??null,
+        temps:[...new Set(arr(r["Serving temperature"]).map(tempFix))],rice:arr(r["Rice varieties"]),pairings:arr(r["Pairing ideas"]),
+        tasteLabel:r["Taste profile"]||null,notionUrl:r.url,description:r.Description||""};
+      const cur=bottles.get(id);
+      if(!cur){
+        const lp=labelProfile(base.tasteLabel);
+        await db.doc("bottles/"+id).set({...base,id,status:r.Status||"Unopened",storage:"Shelf",notionStatus:r.Status||"Unopened",notionPending:false,
+          descTrusted:false,profile:lp?{...lp,aroma:null,acid:null,notes:[]}:null,profileSource:lp?"notion-label":null});
+        added++;
+      }else{
+        const upd={...base}; delete upd.description; // keep the vetted description; Notion's text is often for another bottle
+        if(!cur.notionPending && r.Status && r.Status!==cur.status){upd.status=r.Status;upd.notionStatus=r.Status;}
+        await db.doc("bottles/"+id).update(upd); updated++;
+      }
+    }
+    // push any status changes Notion hasn't received yet
+    for(const b of bottles.values()) if(b.notionPending){
+      try{await mcp.callTool(NOTION,"notion-update-page",{page_id:b.id,command:"update_properties",properties:{Status:b.status}});
+        await db.doc("bottles/"+b.id).update({notionPending:false,notionStatus:b.status});}catch{}
+    }
+    toast(`Synced · ${added} new, ${updated} refreshed`);
+  }catch(e){ toast(notionMsg(e),5000); }
+  finally{ const b2=$("#sync"); if(b2){b2.disabled=false;b2.textContent="Sync from Notion";} }
+}
+
+/* ---------- Claude ---------- */
+async function saveProfile(id,p,source,st){
+  try{ await db.doc("bottles/"+id).update({profile:p,profileSource:source}); if(st) st.textContent="Profile saved."; toast("Profile saved"); }
+  catch{ if(st) st.textContent="Couldn't save the profile. Try again."; }
+}
+const VOCAB=Object.values(FAMILIES).flat().join(", ");
+function sampleMsg(e){
+  return {not_granted:"Claude isn't allowed on this page.",rate_limited:"Claude is busy for you right now. Try again in a bit.",
+    invalid_json:"Claude's answer couldn't be read. Try again.",image_rejected:"That photo couldn't be used. Try a clearer, smaller one.",
+    refused:"Claude couldn't help with that input.",session_expired:"Sign in to Claude again."}[e?.code]||"Claude couldn't answer just now. Try again.";
+}
+async function readCard(id,{image,text,estimate},st){
+  const b=bottles.get(id);
+  st.textContent=estimate?"Asking Claude…":"Reading the card…";
+  const shape=`Reply with only JSON: {"body":1-5,"sweet":1-5,"aroma":1-5,"acid":1-5,"notes":[3-6 lowercase flavor words],"smv":number|null,"abv":number|null,"rpr":number|null,"grade":string|null,"summary":"one sentence"}.
+Scales: body 1=very light 5=very rich; sweet 1=very dry 5=very sweet (use SMV/sake meter if shown: +5 or more is dry, negative is sweet); aroma 1=quiet 5=very fragrant; acid 1=soft 5=bright/sharp.
+Prefer these flavor words when they fit: ${VOCAB}.`;
+  const who=`Sake: "${b.name}". Grade: ${(b.category||[]).join(", ")||"unknown"}. ABV ${b.abv??"?"}%. Polish ratio ${b.rpr??"?"}%. Rice: ${(b.rice||[]).join(", ")||"?"}.`;
+  const prompt=estimate
+    ? `${who}\nFrom what you know about this specific sake, estimate its tasting profile. If you don't recognize it, infer from the grade, polish and rice and say so in the summary.\n${shape}`
+    : image ? `This is a photo of a sake tasting card or label for ${who}\nExtract its official tasting profile.\n${shape}`
+    : `${who}\nThis is the official tasting text for it:\n"""${text.slice(0,4000)}"""\nTurn it into a tasting profile.\n${shape}`;
+  try{
+    const j=await sample.json(prompt,image?{images:[image]}:{});
+    const clamp=v=>v==null||isNaN(+v)?null:Math.max(1,Math.min(5,Math.round(+v)));
+    const p={body:clamp(j.body),sweet:clamp(j.sweet),aroma:clamp(j.aroma),acid:clamp(j.acid),
+      notes:(Array.isArray(j.notes)?j.notes:[]).map(normNote).filter(Boolean).slice(0,8),smv:j.smv??null,summary:String(j.summary||"").slice(0,300)};
+    await saveProfile(id,p,estimate?"claude-estimate":"tippsy-card",st);
+    if(!estimate && j.abv && !b.abv) db.doc("bottles/"+id).update({abv:+j.abv}).catch(()=>{});
+  }catch(e){ st.textContent=sampleMsg(e); }
+}
+let takeCtl=null;
+async function askTake(){
+  const b=bottles.get(ui.bottleId), g=ui.guess, r=ui.result, out=$("#ai-out"), btn=$("#ask-take");
+  takeCtl?.abort(); takeCtl=new AbortController();
+  out.hidden=false; out.textContent="Thinking…"; btn.disabled=true;
+  const p=b.profile||{};
+  const prompt=`You are a warm, expert sake sommelier coaching a home taster. In 3 to 4 short sentences, plain text, no lists: say what they read well, the biggest gap, and one concrete thing to notice in the next sip (temperature, where on the tongue, finish). Don't repeat the numbers back.
+Sake: ${b.name} (${(b.category||[]).join(", ")}, ${b.abv??"?"}% ABV, polish ${b.rpr??"?"}%). Served: ${g.temp}. Recommended: ${(b.temps||[]).join(", ")}.
+Profile (1-5): body ${p.body??"?"}, sweetness ${p.sweet??"?"}, aroma ${p.aroma??"?"}, acidity ${p.acid??"?"}; notes: ${(p.notes||[]).join(", ")||"none listed"}. ${p.summary||""}
+Their guess (1-5): body ${g.body}, sweetness ${g.sweet}, aroma ${g.aroma}, acidity ${g.acid}; notes: ${g.notes.join(", ")||"none"}. Score ${r.total}/100.${g.comment?` Their comment: "${g.comment.slice(0,300)}"`:""}`;
+  try{
+    const {text}=await sample(prompt,{modelTier:"quick",signal:takeCtl.signal,onText:({text})=>{out.textContent=text;}});
+    ui.aiText=text;
+  }catch(e){ if(e.code!=="cancelled") out.textContent=(e.text?e.text+"\n\n":"")+sampleMsg(e); }
+  finally{ btn.disabled=false; }
+}
+
+/* ---------- boot ---------- */
+addEventListener("hashchange",()=>{ if(route()!=="taste"&&ui.step==="reveal"){ui.step="pick";} render(); scrollTo(0,0); });
+render();
+(async()=>{
+  const c=window.claude;
+  if(!c?.use){ render(); return; }
+  [db,mcp,sample]=await Promise.all([c.use("db"),c.use("mcp"),c.use("sample")]);
+  if(sample){ try{ imagesOK=!!(await sample.limits()).images; }catch{} }
+  if(!db){ render(); return; }
+  const timer=setTimeout(()=>{ if(!loaded.b) $("#view").innerHTML=`<div class="card empty">Your cellar is taking too long to load. Check your connection and reopen the page.</div>`; },10000);
+  db.collection("bottles").onSnapshot(s=>{
+    clearTimeout(timer); bottles.clear(); s.docs.forEach(d=>bottles.set(d.id,{id:d.id,...d.data()})); loaded.b=true;
+    $("#sub").textContent=`${bottles.size} bottle${bottles.size===1?"":"s"} in the cellar`;
+    if(ui.step!=="guess") render(); // don't wipe a guess in progress
+  },()=>{ clearTimeout(timer); $("#view").innerHTML=`<div class="card empty">Couldn't load your cellar. Reopen the page to try again.</div>`; });
+  db.collection("tastings").orderBy("at","desc").limit(500).onSnapshot(s=>{
+    tastings=s.docs.map(d=>({id:d.id,...d.data()})); loaded.t=true;
+    if(ui.step!=="guess") render();
+  },()=>{});
+})();
+</script>
